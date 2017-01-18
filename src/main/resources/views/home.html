@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+	<head>
+		<title>Home</title>
+	</head>
+	<body>
+	<ul>
+		<li><a th:href="@{/signout}">Sign Out</a></li>
+	</ul>
+	<h3>Hello, <span th:text="${facebookProfile.name}">Some User</span>!</h3>
+	<ul>
+	</ul>
+	</body>
+</html>

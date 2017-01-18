@@ -1,0 +1,17 @@
+package com.sticksGame.signin;
+
+/**
+ * Created by dmorenoh on 10/1/17.
+ */
+public class User {
+    private final String id;
+
+    public User(String id) {
+        this.id = id;
+    }
+
+    public String getId() {
+        return id;
+    }
+
+}

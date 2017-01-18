@@ -1,0 +1,25 @@
+<html xmlns:th="http://www.w3.org/1999/xhtml">
+<head>
+    <title>Sticks Game</title>
+</head>
+<body>
+<h3>Hello, <span th:text="${facebookProfile.firstName}"></span>!</h3>
+<h4>Please check your updated game statistics:</h4>
+<p>
+    <span th:text="${userStatistic.gamesWon}"></span> games won
+</p>
+<p>
+
+    <span th:text="${userStatistic.gamesLost}"></span>  games lost
+</p>
+<p>
+    <span th:text="${userStatistic.totalGames}"></span> total games
+</p>
+<p>
+    Click <a href="/index.html">here</a> to start playing.
+</p>
+<p>
+    Click <a href="/postWonGames" methods="">here</a> for posting your results.
+</p>
+</body>
+</html>

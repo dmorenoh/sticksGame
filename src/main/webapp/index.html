@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:og="http://ogp.me/ns#"
+      xmlns:fb="https://www.facebook.com/2008/fbml">
+<head lang="en">
+    <title>The Stick Game</title>
+    <link rel="stylesheet" type="text/css" media="all" href="css/bootstrap-3.1.1.css"/>
+</head>
+<body>
+
+
+<nav class="navbar navbar-inverse" role="navigation">
+    <div class="container">
+        <div class="navbar-header">
+            <a class="navbar-brand" href="#">The Stick Game</a>
+        </div>
+        <div class="navbar-text navbar-right" id="login">
+            <fb:login-button scope="public_profile" onlogin="checkLoginState();">
+            </fb:login-button>
+        </div>
+        <div class="navbar-text navbar-right">
+            Statistics: <label for="played">played</label> <span id="played">0</span> <label for="won">won</label> <span
+                id="won">0</span> <label for="lost">lost</label> <span id="lost">0</span>
+        </div>
+    </div>
+</nav>
+<div class="container" role="main">
+
+    <h3>Welcome to the The Stick Game</h3>
+
+    <div>
+        <b>Rules:</b>
+        <p>
+            Select a number of sticks to start the with. Then the computer (AI) and you are taking turns in taking 1-3 sticks.
+            The player that takes the last sticks wins.
+        </p>
+    </div>
+
+    <div class="form-inline">
+        <div class="form-group">
+            <input type="text" placeholder="Amount of sticks" id="startSticks" class="form-control"/>
+        </div>
+        <button id="startGame" class="btn btn-default">Start Game</button>
+    </div>
+
+    <hr/>
+
+    <div id="game">
+        <div id="message" class="well"></div>
+        <div class="form-horizontal">
+            <div class="form-group">
+                <label for="remainingSticks" class="col-sm-2">Remaining sticks:</label> <span id="remainingSticks">0</span>
+            </div>
+            <div class="form-group">
+                <label class="col-sm-2">Take Sticks</label>
+                <label class="radio-inline"><input type="radio" name="sticks" value="1">1</label>
+                <label class="radio-inline"><input type="radio" name="sticks" value="2">2</label>
+                <label class="radio-inline"><input type="radio" name="sticks" value="3">3</label>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+
+<script type="text/javascript" src="js/jquery-1.11.1.min.js"></script>
+<script type="text/javascript" src="js/statisticsLocalStorage.js"></script>
+<script type="text/javascript">
+    // setup namespace
+    TSG = window.TSG || {};
+
+    $('#game').hide();
+
+    // number of sticks you can take at most at once
+    TSG.maxSticksToTake = 3;
+    // number of currently available sticks to take
+    TSG.currentSticks = 0;
+    // statistics about lost and won games
+    TSG.stats = new TSG.StatisticsLocalStorage({
+        onChange : function(stats) {
+            updateStatistics(stats);
+        }
+    });
+
+    // Functions //////////////////////////////////////////////////////////////
+
+    $('#startGame').click(function () {
+        TSG.currentSticks = $('#startSticks').val();
+        updateCurrentSticks();
+        enableTakeSticks();
+        $('#game').show();
+        aiChooses();
+    });
+
+    /**
+     * AI chooses how many sticks to take, takes them and announces it to the player.
+     */
+    function aiChooses() {
+        if (TSG.currentSticks <= TSG.maxSticksToTake) {
+            updateMessage('AI: I choose ' + TSG.currentSticks + " sticks - I won :D");
+            TSG.currentSticks = 0;
+            TSG.stats.gameFinished(false);
+            disableTakeSticks();
+        } else {
+            var sticksToTake = Math.floor((Math.random() * TSG.maxSticksToTake) + 1);
+            updateMessage('AI: I choose ' + sticksToTake + ' sticks - your turn');
+            TSG.currentSticks -= sticksToTake;
+        }
+        updateCurrentSticks();
+    }
+
+    $('[name=sticks]').click(function () {
+        var chosenValue = $('[name=sticks]:checked').val();
+        if (TSG.currentSticks == 0) {
+            return; // game has ended
+        } else if (chosenValue > TSG.currentSticks) {
+            updateMessage('You cannot take more than ' + TSG.currentSticks)
+        } else if (chosenValue > TSG.maxSticksToTake) {
+            updateMessage('You cannot take more than ' + TSG.maxSticksToTake)
+        } else if (chosenValue == TSG.currentSticks) {
+            TSG.currentSticks = 0;
+            updateMessage('AI: You won :(');
+            TSG.stats.gameFinished(true);
+            disableTakeSticks();
+        } else {
+            TSG.currentSticks -= chosenValue;
+            aiChooses();
+        }
+        $('[name=sticks]').removeAttr('checked');
+        updateCurrentSticks();
+    });
+
+    function disableTakeSticks() {
+        $('[name=sticks]').attr('disabled', 'disabled');
+    }
+
+    function enableTakeSticks() {
+        $('[name=sticks]').removeAttr('disabled');
+    }
+
+    // Text updates
+
+    function updateCurrentSticks() {
+        $('#remainingSticks').text(TSG.currentSticks);
+    }
+
+    function updateMessage(msg) {
+        $('#message').html(msg);
+    }
+
+    function updateStatistics(currentStats) {
+        $('#played').text(currentStats.played);
+        $('#won').text(currentStats.won);
+        $('#lost').text(currentStats.lost);
+    }
+
+    // FACEBOOK related calls
+
+    function statusChangeCallback(response) {
+        if (response.status === 'connected') {
+            FB.api('/me', function(resp) {
+                $('#login').html('Logged in as: ' + resp.first_name);
+            });
+        } else if (response.status === 'not_authorized') {
+            // The person is logged into Facebook, but not your app.
+        } else {
+            // The person is not logged into Facebook, so we're not sure if
+            // they are logged into this app or not.
+        }
+    }
+
+    function checkLoginState() {
+        FB.getLoginStatus(function (response) {
+            statusChangeCallback(response);
+        });
+    }
+
+    // init FB
+    window.fbAsyncInit = function () {
+        FB.init({
+            appId      : '1193002844153260',
+            cookie: true,
+            xfbml: true,
+            version: 'v2.0'
+        });
+
+        FB.getLoginStatus(function (response) {
+            statusChangeCallback(response);
+        });
+    };
+
+    // Load the SDK asynchronously
+    (function (d, s, id) {
+        var js, fjs = d.getElementsByTagName(s)[0];
+        if (d.getElementById(id)) {
+            return;
+        }
+        js = d.createElement(s);
+        js.id = id;
+        js.src = "https://connect.facebook.net/en_US/sdk.js";
+        fjs.parentNode.insertBefore(js, fjs);
+    }(document, 'script', 'facebook-jssdk'));
+
+</script>
+
+</body>
+</html>
